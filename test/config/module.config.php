@@ -1,4 +1,5 @@
 <?php
+
 return array(
     'doctrine-hydrator' => array(
         'custom-hydrator' => array(

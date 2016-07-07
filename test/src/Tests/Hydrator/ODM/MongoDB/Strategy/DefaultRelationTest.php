@@ -53,7 +53,7 @@ class DefaultRelationTest extends AbstractMongoStrategyTest
         $embedded->setName('name');
 
         $data = array(
-            $embedded
+            $embedded,
         );
 
         $strategy = $this->getStrategy($this->dm, $user, 'embedMany');

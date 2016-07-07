@@ -9,6 +9,7 @@ use PhproTest\DoctrineHydrationModule\Fixtures\ODM\MongoDb\HydrationEmbedOne;
 use PhproTest\DoctrineHydrationModule\Fixtures\ODM\MongoDb\HydrationReferenceMany;
 use PhproTest\DoctrineHydrationModule\Fixtures\ODM\MongoDb\HydrationReferenceOne;
 use PhproTest\DoctrineHydrationModule\Fixtures\ODM\MongoDb\HydrationUser;
+use PhproTest\DoctrineHydrationModule\Fixtures\Strategy\UnderscoreNamingStrategy;
 
 /**
  * Class DoctrineObjectTest.
@@ -126,6 +127,94 @@ class DoctrineObjectTest extends BaseTest
         $hydrator = new DoctrineObject($this->dm);
         $hydrator->hydrate($data, $user);
 
+        $this->assertEquals(1, $user->getId());
+        $this->assertEquals('user', $user->getName());
+        $this->assertEquals($creationDate->getTimestamp(), $user->getCreatedAt());
+        $this->assertEquals($birthday->getTimestamp(), $user->getBirthday()->getTimestamp());
+        $this->assertInstanceOf('PhproTest\DoctrineHydrationModule\Fixtures\ODM\MongoDb\HydrationReferenceOne', $user->getReferenceOne());
+        $referenceMany = $user->getReferenceMany();
+        $this->assertInstanceOf('PhproTest\DoctrineHydrationModule\Fixtures\ODM\MongoDb\HydrationReferenceMany', $referenceMany[0]);
+        $this->assertInstanceOf('PhproTest\DoctrineHydrationModule\Fixtures\ODM\MongoDb\HydrationEmbedOne', $user->getEmbedOne());
+        $embedMany = $user->getEmbedMany();
+        $this->assertInstanceOf('PhproTest\DoctrineHydrationModule\Fixtures\ODM\MongoDb\HydrationEmbedMany', $embedMany[0]);
+        $this->assertEquals('name', $user->getReferenceOne()->getName());
+        $this->assertEquals('name', $referenceMany[0]->getName());
+        $this->assertEquals('name', $user->getEmbedOne()->getName());
+        $this->assertEquals('name', $embedMany[0]->getName());
+    }
+
+    /**
+     * @test
+     */
+    public function it_should_extract_document_and_cascade_naming_strategy_to_embedded_documents()
+    {
+        $creationDate = new \DateTime();
+        $birthday = new \DateTime('1 january 2014');
+
+        $user = new HydrationUser();
+        $user->setId(1);
+        $user->setName('user');
+        $user->setCreatedAt($creationDate->getTimestamp());
+        $user->setBirthday($birthday);
+
+        $embedOne = new HydrationEmbedOne();
+        $embedOne->setId(1);
+        $embedOne->setName('name');
+        $user->setEmbedOne($embedOne);
+
+        $embedMany = new HydrationEmbedMany();
+        $embedMany->setId(1);
+        $embedMany->setName('name');
+        $user->addEmbedMany(array($embedMany));
+
+        $referenceOne = new HydrationReferenceOne();
+        $referenceOne->setId(1);
+        $referenceOne->setName('name');
+        $user->setReferenceOne($referenceOne);
+
+        $referenceMany = new HydrationEmbedMany();
+        $referenceMany->setId(1);
+        $referenceMany->setName('name');
+        $user->addReferenceMany(array($referenceMany));
+
+        $hydrator = new DoctrineObject($this->dm);
+        $hydrator->setNamingStrategy(new UnderscoreNamingStrategy());
+        $result = $hydrator->extract($user);
+        $this->assertArrayHasKey('_embedOne_', $result);
+        $this->assertArrayHasKey('_name_', $result['_embedOne_']);
+    }
+
+    /**
+     * @test
+     */
+    public function it_should_hydrate_document_and_cascade_naming_strategy_to_embedded_documents()
+    {
+        $creationDate = new \DateTime();
+        $birthday = new \DateTime('1 january 2014');
+
+        $user = new HydrationUser();
+        $data = array(
+            '_id_' => 1,
+            '_name_' => 'user',
+            '_creationDate_' => $creationDate->getTimestamp(),
+            '_birthday_' => $birthday->getTimestamp(),
+            '_referenceOne_' => $this->createReferenceOne('name'),
+            '_referenceMany_' => array($this->createReferenceMany('name')),
+            '_embedOne_' => array(
+                '_id_' => 1,
+                '_name_' => 'name',
+            ),
+            '_embedMany_' => array(
+                array(
+                    '_id_' => 1,
+                    '_name_' => 'name',
+                ),
+            ),
+        );
+
+        $hydrator = new DoctrineObject($this->dm);
+        $hydrator->setNamingStrategy(new UnderscoreNamingStrategy());
+        $user = $hydrator->hydrate($data, $user);
         $this->assertEquals(1, $user->getId());
         $this->assertEquals('user', $user->getName());
         $this->assertEquals($creationDate->getTimestamp(), $user->getCreatedAt());

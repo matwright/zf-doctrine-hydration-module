@@ -67,7 +67,7 @@ class DoctrineObject extends BaseHydrator
                 continue;
             }
 
-            // Create new strategy based on type of filed
+            // Create new strategy based on type of field
             $fieldMeta = $this->metadata->fieldMappings[$association];
             $reference = isset($fieldMeta['reference']) && $fieldMeta['reference'];
             $embedded = isset($fieldMeta['embedded']) && $fieldMeta['embedded'];
@@ -78,13 +78,13 @@ class DoctrineObject extends BaseHydrator
                 if ($reference) {
                     $strategy = new Strategy\ReferencedCollection($this->objectManager);
                 } elseif ($embedded) {
-                    $strategy = new Strategy\EmbeddedCollection($this->objectManager);
+                    $strategy = new Strategy\EmbeddedCollection($this->objectManager, $this->getNamingStrategy());
                 }
             } else {
                 if ($reference) {
                     $strategy = new Strategy\ReferencedField($this->objectManager);
                 } elseif ($embedded) {
-                    $strategy = new Strategy\EmbeddedField($this->objectManager);
+                    $strategy = new Strategy\EmbeddedField($this->objectManager, $this->getNamingStrategy());
                 }
             }
 

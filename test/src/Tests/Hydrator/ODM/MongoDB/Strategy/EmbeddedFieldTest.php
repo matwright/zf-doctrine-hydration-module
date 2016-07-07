@@ -17,7 +17,7 @@ class EmbeddedFieldTest extends AbstractMongoStrategyTest
      */
     protected function createStrategy()
     {
-        return new EmbeddedField();
+        return new EmbeddedField(null, null);
     }
 
     /**
@@ -28,7 +28,6 @@ class EmbeddedFieldTest extends AbstractMongoStrategyTest
         $user = new HydrationUser();
         $user->setId(1);
         $user->setName('username');
-
         $embedded = new HydrationEmbedOne();
         $embedded->setId(1);
         $embedded->setName('name');

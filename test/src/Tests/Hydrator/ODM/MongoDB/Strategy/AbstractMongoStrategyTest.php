@@ -22,7 +22,7 @@ abstract class AbstractMongoStrategyTest extends BaseTest
      *
      * @return StrategyInterface
      */
-    protected function getStrategy($objectManager, $object, $fieldName)
+    protected function getStrategy($objectManager, $object, $fieldName, $namingStrategy = null)
     {
         $objectClass = get_class($object);
         $metadata = $objectManager->getClassMetadata($objectClass);
@@ -32,6 +32,9 @@ abstract class AbstractMongoStrategyTest extends BaseTest
         $strategy->setObjectManager($objectManager);
         $strategy->setCollectionName($fieldName);
         $strategy->setClassMetadata($metadata);
+        if ($namingStrategy) {
+            $strategy->setNamingStrategy($namingStrategy);
+        }
 
         return $strategy;
     }
